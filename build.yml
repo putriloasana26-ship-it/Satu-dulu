@@ -1,0 +1,61 @@
+name: Build Satu Dulu
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Buat folder platform
+        run: flutter create --org com.example --project-name satu_dulu --platforms=android .
+      - name: Pasang kode native Android
+        run: |
+          mkdir -p android/app/src/main/kotlin/com/example/satu_dulu
+          cp android_native/MainActivity.kt android/app/src/main/kotlin/com/example/satu_dulu/MainActivity.kt
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          if 'xmlns:tools' not in s:
+              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
+          perm = '<uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions"/>\n    '
+          s = s.replace('<application', perm + '<application', 1)
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SatuDulu-Android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Buat folder platform
+        run: flutter create --org com.example --project-name satu_dulu --platforms=windows .
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Kemas folder Release
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath SatuDulu-Windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SatuDulu-Windows
+          path: SatuDulu-Windows.zip

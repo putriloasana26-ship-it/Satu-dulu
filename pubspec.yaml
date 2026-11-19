@@ -1,0 +1,14 @@
+name: satu_dulu
+description: Aplikasi pendamping belajar untuk mengurangi distraksi digital.
+publish_to: none
+version: 1.0.0+1
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  ffi: ^2.1.0
+  win32: ^5.5.0
+  window_manager: ^0.4.2
+flutter:
+  uses-material-design: true
